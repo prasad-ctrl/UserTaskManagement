@@ -2,8 +2,8 @@
 
 Engineering: Multi user approval Assignment
 
-1.⁠ ⁠1. Postgres Database and Login:
-● Create a PostgresSQL database to store user information such as name and email.
+1.⁠ ⁠1. MYSQL Database and Login:
+● Create a MYSQL database to store user information such as name and email.
 ● Develop a login APIs that allows users to sign up and assigns them an internal
 login ID.
 ● Develop APIs to create tasks. Any user can create a task. (You can assume a
@@ -23,3 +23,34 @@ signs off, and notify all parties involved via email when everyone signs off.
 
 ● Break down the multi-signature process into REST APIs.
 ● Ensure that the APIs can be integrated into any webpage.
+
+
+Models:
+
+1. User
+    ID(PK)
+    Name
+    Email
+    Password
+2. Login
+    ID(pk)
+    user_id(fk)
+    Login_Id
+3. Task
+    ID(pk)
+    user_id(fk)
+    task_name
+    status
+    approval_count
+4. user_to_task_map
+    ID(pk)
+    user_id
+    task_id    
+5. user_to_comment_map(1:M)
+    ID(pk)
+    user_id
+    task_id
+    comment
+
+
+
