@@ -1,11 +1,14 @@
 package com.ecommers.multiapprovalsystem.Service;
 
+import com.ecommers.multiapprovalsystem.DTO.AuthenticationResponse;
 import com.ecommers.multiapprovalsystem.DTO.RegisterRequest;
+import com.ecommers.multiapprovalsystem.DTO.RegisterResponse;
 import com.ecommers.multiapprovalsystem.Model.Login;
 import com.ecommers.multiapprovalsystem.Model.User;
 import com.ecommers.multiapprovalsystem.Repository.LoginRepo;
 import com.ecommers.multiapprovalsystem.Repository.UserRepo;
 import lombok.extern.slf4j.Slf4j;
+import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -22,43 +25,60 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     @Autowired
     private LoginRepo loginRepo;
     @Override
-    public String authentication(String email, String password) throws Exception {
+    public AuthenticationResponse authentication(String email, String password){
         if(email.isBlank() || password.isBlank()){
-            throw new Exception("username and password must not be empty");
+            log.error("Authentication Required username and password");
+            return null;
         }
         com.ecommers.multiapprovalsystem.Model.User user = userRepo.findByEmail(email);
-        if(user != null && email.equalsIgnoreCase(user.getEmail()) && password.equalsIgnoreCase(user.getPassword())){
+        if(user != null && email.equalsIgnoreCase(user.getEmail()) && checkPassword(password,user.getPassword())){
             Login loggedInUser = loginRepo.findByUserId(user.getId());
-            if(loggedInUser != null)return loggedInUser.getLoginId();
+            if(loggedInUser != null)
+                return AuthenticationResponse.builder().userId(loggedInUser.getUserId()).sessionId(loggedInUser.getLoginId()).build();
             String loginId = UUID.randomUUID().toString();
             Login newLoginRequest = Login.builder()
                     .userId(user.getId())
                     .loginId(loginId)
                     .build();
             loginRepo.save(newLoginRequest);
-            return loginId;
+            return AuthenticationResponse.builder().userId(user.getId()).sessionId(loginId).build();
         }
         return null;
     }
 
     @Override
-    public boolean registerUser(RegisterRequest request) {
+    public RegisterResponse registerUser(RegisterRequest request) {
+        RegisterResponse response;
         try {
             validateRegistration(request);
             User registerUser = User.builder()
                     .name(request.getName())
                     .email(request.getEmail())
-                    .name(request.getName())
+                    .password(encryptPassword(request.getPassword()))
                     .build();
             userRepo.save(registerUser);
-            return true;
+             response = RegisterResponse.builder()
+                    .userName(request.getName())
+                    .message("Registered Successfully")
+                    .build();
+
         }catch (Exception e){
+            response = RegisterResponse.builder()
+                    .userName(request.getName())
+                    .message("Registered Failed!")
+                    .build();
             log.error("Error registering user Error: {}",e.getMessage());
         }
-        return false;
+        return response;
     }
     public void validateRegistration(RegisterRequest request) throws Exception{
         if(request.getEmail().isBlank() || request.getPassword().isBlank() || request.getName().isBlank())
             throw new Exception("Invalid Request");
+    }
+    public String encryptPassword(String password){
+        return BCrypt.hashpw(password, BCrypt.gensalt(12));
+    }
+    public static boolean checkPassword(String plainPassword, String hashedPassword) {
+        return BCrypt.checkpw(plainPassword, hashedPassword);  // Verify password
     }
 }
