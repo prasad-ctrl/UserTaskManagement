@@ -1,8 +1,6 @@
 package com.ecommers.multiapprovalsystem.Model;
 
-import jakarta.persistence.AttributeOverride;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
@@ -11,11 +9,13 @@ import org.hibernate.annotations.UuidGenerator;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity(name = "User")
+@Builder
 public class User {
     @Id
     @UuidGenerator
     private String id;
     private String name;
+    @Column(unique = true)
     private String email;
     private String password;
 }
