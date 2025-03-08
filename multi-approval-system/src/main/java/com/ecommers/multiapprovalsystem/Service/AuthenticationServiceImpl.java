@@ -1,18 +1,19 @@
 package com.ecommers.multiapprovalsystem.Service;
 
+import com.ecommers.multiapprovalsystem.Component.JwtUtil;
 import com.ecommers.multiapprovalsystem.DTO.AuthenticationResponse;
 import com.ecommers.multiapprovalsystem.DTO.RegisterRequest;
 import com.ecommers.multiapprovalsystem.DTO.RegisterResponse;
-import com.ecommers.multiapprovalsystem.Model.Login;
+import com.ecommers.multiapprovalsystem.Model.Token;
 import com.ecommers.multiapprovalsystem.Model.User;
-import com.ecommers.multiapprovalsystem.Repository.LoginRepo;
+import com.ecommers.multiapprovalsystem.Repository.TokenRepo;
 import com.ecommers.multiapprovalsystem.Repository.UserRepo;
 import lombok.extern.slf4j.Slf4j;
 import org.mindrot.jbcrypt.BCrypt;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
+import java.util.Date;
 
 
 @Service
@@ -23,7 +24,10 @@ public class AuthenticationServiceImpl implements AuthenticationService {
     private UserRepo userRepo;
 
     @Autowired
-    private LoginRepo loginRepo;
+    private JwtUtil jwtUtil;
+
+    @Autowired
+    private TokenRepo loginRepo;
     @Override
     public AuthenticationResponse authentication(String email, String password){
         if(email.isBlank() || password.isBlank()){
@@ -32,15 +36,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         com.ecommers.multiapprovalsystem.Model.User user = userRepo.findByEmail(email);
         if(user != null && email.equalsIgnoreCase(user.getEmail()) && checkPassword(password,user.getPassword())){
-            Login loggedInUser = loginRepo.findByUserId(user.getId());
-            if(loggedInUser != null)
-                return AuthenticationResponse.builder().userId(loggedInUser.getUserId()).sessionId(loggedInUser.getLoginId()).build();
-            String loginId = UUID.randomUUID().toString();
-            Login newLoginRequest = Login.builder()
-                    .userId(user.getId())
+            String loginId = jwtUtil.generateToken(email);
+            Token token  = Token.builder()
                     .loginId(loginId)
-                    .build();
-            loginRepo.save(newLoginRequest);
+                    .userId(user.getId())
+                    .expiryDate(new Date(System.currentTimeMillis() + 60 * 60 * 1000)).build();
+            loginRepo.save(token);
             return AuthenticationResponse.builder().userId(user.getId()).sessionId(loginId).build();
         }
         return null;
@@ -71,6 +72,12 @@ public class AuthenticationServiceImpl implements AuthenticationService {
         }
         return response;
     }
+
+    @Override
+    public void logout(String tokenId) {
+        jwtUtil.removeToken(tokenId);
+    }
+
     public void validateRegistration(RegisterRequest request) throws Exception{
         if(request.getEmail().isBlank() || request.getPassword().isBlank() || request.getName().isBlank())
             throw new Exception("Invalid Request");

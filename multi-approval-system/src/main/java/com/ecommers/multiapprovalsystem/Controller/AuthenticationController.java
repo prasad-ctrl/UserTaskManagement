@@ -29,4 +29,9 @@ public class AuthenticationController {
     public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request){
         return new ResponseEntity<>(service.registerUser(request), HttpStatus.OK);
     }
+
+    public ResponseEntity<Void> logout(@RequestParam String tokenId){
+        service.logout(tokenId);
+        return new ResponseEntity<>(null,HttpStatus.OK);
+    }
 }
