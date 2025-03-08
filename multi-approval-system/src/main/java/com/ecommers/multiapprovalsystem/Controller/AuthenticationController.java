@@ -1,17 +1,17 @@
 package com.ecommers.multiapprovalsystem.Controller;
 
+import com.ecommers.multiapprovalsystem.DTO.AuthenticationResponse;
 import com.ecommers.multiapprovalsystem.DTO.RegisterRequest;
+import com.ecommers.multiapprovalsystem.DTO.RegisterResponse;
 import com.ecommers.multiapprovalsystem.Service.AuthenticationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-@RestController("/login")
+@RestController
+@RequestMapping("/login")
 @Slf4j
 public class AuthenticationController {
 
@@ -19,18 +19,14 @@ public class AuthenticationController {
     public AuthenticationService service;
 
     @PostMapping("/auth")
-    public ResponseEntity<String> login(@RequestParam String email,
-                                         @RequestParam String password){
-        try {
-            return new ResponseEntity<>(service.authentication(email, password), HttpStatus.OK);
-        }catch (Exception e){
-            log.error("Error while authenticating Error: {}",e.getMessage());
-        }
-        return new ResponseEntity<>(null,HttpStatus.NOT_ACCEPTABLE);
+    public ResponseEntity<AuthenticationResponse> login(@RequestParam String email,
+                                                        @RequestParam String password){
+
+        return new ResponseEntity<>(service.authentication(email, password), HttpStatus.OK);
     }
 
     @PostMapping("/register")
-    public ResponseEntity<Boolean> register(@RequestBody RegisterRequest request){
-
+    public ResponseEntity<RegisterResponse> register(@RequestBody RegisterRequest request){
+        return new ResponseEntity<>(service.registerUser(request), HttpStatus.OK);
     }
 }
