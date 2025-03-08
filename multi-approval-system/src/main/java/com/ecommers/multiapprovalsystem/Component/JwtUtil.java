@@ -6,9 +6,11 @@ import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.ecommers.multiapprovalsystem.Repository.TokenRepo;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestHeader;
 
 import java.util.Date;
 
@@ -59,6 +61,12 @@ public class JwtUtil {
 
     public void removeToken(String token){
         loginRepo.deleteByLoginId(token);
+    }
+
+    public boolean validateHeaderToken(HttpServletRequest httpServletRequest ){
+        String token = httpServletRequest.getHeader("X-Session-Token");
+        if(token.isBlank()) return false;
+        return verifyToken(token);
     }
 
 
