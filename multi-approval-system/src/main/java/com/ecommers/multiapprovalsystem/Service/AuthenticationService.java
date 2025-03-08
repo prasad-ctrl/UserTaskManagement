@@ -11,4 +11,5 @@ public interface AuthenticationService {
 
     public RegisterResponse registerUser(RegisterRequest request);
 
+   public void logout(String tokenId);
 }
